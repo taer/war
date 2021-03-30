@@ -53,18 +53,12 @@ interface Player{
     fun hasLessThan(x: Int): Boolean
     fun draw(): Card
     fun addWinnings(wins: List<Card>)
-    fun drawWar(): Card {
-        return draw()
-    }
+    fun drawWar() = draw()
 }
 
 class PlayerSimple(private val hand: MutableList<Card>): Player{
-    override fun hasLessThan(x: Int): Boolean{
-        return hand.size < x
-    }
-    override fun draw(): Card{
-        return hand.removeFirst()
-    }
+    override fun hasLessThan(x: Int) = hand.size < x
+    override fun draw() = hand.removeFirst()
     override fun addWinnings(wins: List<Card>){
         hand.addAll(wins.shuffled())
     }
@@ -73,9 +67,7 @@ class PlayerSimple(private val hand: MutableList<Card>): Player{
 class PlayerWithDiscard(hand: MutableList<Card>): Player{
     val currentHand = hand.toMutableList()
     val discard = mutableListOf<Card>()
-    override fun hasLessThan(x: Int): Boolean{
-        return (currentHand.size + discard.size) < x
-    }
+    override fun hasLessThan(x: Int) = (currentHand.size + discard.size) < x
     override fun draw(): Card{
         if(currentHand.isEmpty()){
             currentHand.addAll(discard.shuffled())
@@ -89,11 +81,11 @@ class PlayerWithDiscard(hand: MutableList<Card>): Player{
 }
 
 class PlayerCheat(private val hand: MutableList<Card>): Player{
-    override fun hasLessThan(x: Int): Boolean {
-        return hand.size < x
-    }
+    override fun hasLessThan(x: Int) = hand.size < x
     override fun draw(): Card{
-        hand.sortByDescending { it.rank }
+        hand.sortByDescending {
+            it.rank
+        }
         return hand.removeFirst()
     }
     override fun addWinnings(wins: List<Card>){
@@ -145,22 +137,22 @@ private fun runLoop(p2: Player, p1: Player): FinalResult {
 
 data class WarResult(val winnings: MutableList<Card>, val player1Win: Boolean, val depth: Int)
 
-fun war(p1: Player, p2: Player, winnings: MutableList<Card>, depth: Int) : WarResult {
+fun war(p1: Player, p2: Player, winnings: MutableList<Card>, depth: Int): WarResult {
 
-    val drawCardsWar=3
-    if (p2.hasLessThan(drawCardsWar+1)) {
+    val drawCardsWar = 3
+    if (p2.hasLessThan(drawCardsWar + 1)) {
         return WarResult(winnings, true, depth)
     }
-    if (p1.hasLessThan(drawCardsWar+1)) {
+    if (p1.hasLessThan(drawCardsWar + 1)) {
         return WarResult(winnings, false, depth)
     }
 
 
-    val p1DownCards = List(drawCardsWar){
+    val p1DownCards = List(drawCardsWar) {
         p1.drawWar()
     }
 
-    val p2DownCards = List(drawCardsWar){
+    val p2DownCards = List(drawCardsWar) {
         p2.drawWar()
     }
 
@@ -173,11 +165,11 @@ fun war(p1: Player, p2: Player, winnings: MutableList<Card>, depth: Int) : WarRe
     winnings.addAll(p2DownCards)
 
 
-    if(p1Up.rank > p2Up.rank){
-        return WarResult(winnings, true,depth)
-    }else if(p1Up.rank < p2Up.rank){
-        return WarResult(winnings, false,depth)
-    }else{
-        return war(p1, p2, winnings,depth+1)
+    return if (p1Up.rank > p2Up.rank) {
+        WarResult(winnings, true, depth)
+    } else if (p1Up.rank < p2Up.rank) {
+        WarResult(winnings, false, depth)
+    } else {
+        war(p1, p2, winnings, depth + 1)
     }
 }
